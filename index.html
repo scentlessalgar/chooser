@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chooser</title>
+<meta name="description" content="Chooser: a quick way for a family to decide what to do.">
+<meta name="theme-color" content="#121014">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23FF5FA2'/%3E%3Csvg x='0' y='0' width='64' height='64' viewBox='-9 2 33 33' preserveAspectRatio='xMaxYMax meet'%3E%3Cpath fill='%23121014' d='M24 2.2C22.6 2.2 21.3 2.4 20.3 2.9L19.3 2.3L18.9 3.9C17.9 4.9 17.3 6.4 17.3 8.2L17.5 10.3C16.3 10 15.7 11.1 15.9 12.3C16.1 13.5 16.9 14.1 17.8 13.9C18.3 15.9 19.9 17.6 21.9 18.3L22 20.3C19.4 20.7 16.1 21.3 14.2 22.4L12.6 46H24Z M7.8 25.3L1.7 24.6C0.6 24.5 0.4 22.9 1.5 22.8L5.3 22.5L6.3 20.4C6.7 19.6 7.9 19.9 7.7 20.8L7.6 22.7Z'/%3E%3Cpath d='M15.4 23.9L9.4 31.4L6.9 24' fill='none' stroke='%23121014' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #121014; --ink: #FF5FA2; --text: #F6F2F5; --muted: #B3ACB8; --surface: #1E1B21;
+  --line: #34303A; --soft: #28242C; --accent: #FF5FA2; --accent-ink: #121014;
+  --accent-soft: #3A1F2E; --accent-soft-ink: #FFB3D3; --display: 'Bricolage Grotesque', Inter, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font-family: Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+body { min-height: 100dvh; }
+button { font-family: inherit; color: inherit; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+#app { max-width: 440px; margin: 0 auto; min-height: 100dvh; position: relative; overflow: hidden; }
+.screen { min-height: 100dvh; display: flex; flex-direction: column; padding: 20px 20px 24px; padding-top: max(20px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+.display { font-family: var(--display); font-weight: 800; letter-spacing: -0.02em; }
+.grow { flex-grow: 1; }
+.muted { color: var(--muted); }
+.topbar { display: flex; align-items: center; justify-content: space-between; min-height: 44px; gap: 12px; }
+.round { width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line); background: var(--surface); display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; flex-shrink: 0; }
+.logo { position: relative; overflow: hidden; border-radius: 10px; background: var(--ink); flex-shrink: 0; }
+.logo::after { content: ''; position: absolute; inset: 0; border: 2px solid var(--ink); border-radius: inherit; pointer-events: none; }
+.logo svg { display: block; width: 100%; height: 100%; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-weight: 700; font-size: 18px; color: var(--ink); }
+.btn { display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 56px; border-radius: 16px; border: none; font-size: 17px; font-weight: 600; cursor: pointer; text-decoration: none; padding: 0 18px; }
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-ghost { background: none; color: var(--muted); min-height: 44px; }
+.btn-outline { background: var(--surface); border: 1px solid var(--line); color: var(--text); }
+/* splash */
+.splash { background: var(--bg); color: var(--ink); padding: 28px 24px 32px; }
+.phrase { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; width: 100%; padding: 0; background: none; border: none; color: var(--ink); text-align: left; cursor: pointer; }
+.phrase .big { font-family: var(--display); font-size: clamp(36px, 11vw, 46px); line-height: 1.04; font-weight: 800; letter-spacing: -0.025em; }
+.phrase .go { display: inline-flex; align-items: center; gap: 12px; font-size: 17px; font-weight: 600; }
+.go-dot { width: 52px; height: 52px; border-radius: 26px; background: var(--ink); color: var(--bg); display: flex; align-items: center; justify-content: center; }
+.chip-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 22px; border: 2px solid var(--ink); background: transparent; color: var(--ink); font-size: 14px; font-weight: 600; cursor: pointer; }
+/* home */
+.context { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 15px; background: var(--soft); font-size: 13px; font-weight: 500; border: none; color: var(--text); }
+button.chip { cursor: pointer; color: var(--accent-soft-ink); background: var(--accent-soft); }
+.big-btn { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 112px; padding: 22px 24px; border: none; border-radius: 24px; background: var(--accent); color: var(--accent-ink); text-align: left; cursor: pointer; }
+.big-btn .t { font-family: var(--display); font-size: 26px; font-weight: 700; display: block; }
+.big-btn .s { font-size: 14px; color: #4A1630; display: block; margin-top: 6px; }
+.big-btn .arrow { width: 48px; height: 48px; border-radius: 24px; background: var(--bg); color: var(--ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.alt-btn { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; min-height: 84px; padding: 16px 24px; border: 1px solid var(--line); border-radius: 24px; background: var(--surface); color: var(--text); text-align: left; cursor: pointer; margin-top: 12px; }
+.alt-btn .t { font-family: var(--display); font-size: 20px; font-weight: 700; display: block; }
+.alt-btn .s { font-size: 13px; color: var(--muted); display: block; margin-top: 4px; }
+.alt-btn .ico { width: 44px; height: 44px; border-radius: 22px; background: var(--accent-soft); color: var(--accent-soft-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+/* questions */
+.progress { flex: 1; display: flex; gap: 6px; }
+.progress span { flex: 1; height: 6px; border-radius: 3px; background: var(--line); }
+.progress span.on { background: var(--ink); }
+.eyebrow { margin: 32px 0 8px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
+.qtitle { margin: 0; font-size: 34px; line-height: 1.08; color: var(--ink); }
+.why { margin-top: 14px; display: flex; gap: 8px; align-items: flex-start; color: var(--muted); font-size: 14px; line-height: 1.45; }
+.options { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
+.opt { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding: 8px 18px; border-radius: 16px; border: 2px solid var(--line); background: var(--surface); font-size: 17px; font-weight: 600; color: var(--text); cursor: pointer; text-align: left; }
+.opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+.opt .sub { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-top: 2px; }
+.dot { width: 24px; height: 24px; flex-shrink: 0; border-radius: 12px; display: flex; align-items: center; justify-content: center; border: 2px solid var(--line); color: transparent; }
+.opt.sel .dot { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.peck { margin-top: 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 8px 16px; border-radius: 16px; border: 1px dashed var(--line); background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.switch { width: 46px; height: 28px; border-radius: 14px; background: var(--line); position: relative; flex-shrink: 0; transition: background .16s; }
+.switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 11px; background: var(--surface); transition: left .16s; }
+.peck[aria-pressed="true"] .switch { background: var(--accent); }
+.peck[aria-pressed="true"] .switch::after { left: 21px; background: var(--accent-ink); }
+/* cards */
+.banner { margin-top: 12px; display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; background: var(--accent-soft); color: var(--accent-soft-ink); font-size: 13px; font-weight: 500; }
+.stack { position: relative; flex: 1; min-height: 470px; margin-top: 14px; }
+.ghost { position: absolute; top: 18px; left: 12px; right: 12px; bottom: -8px; border-radius: 28px; background: var(--surface); border: 1px solid var(--line); opacity: .7; }
+.card { position: absolute; inset: 0; border-radius: 28px; background: var(--surface); border: 1px solid var(--line); box-shadow: 0 12px 32px rgba(0,0,0,.35); overflow: hidden; display: flex; flex-direction: column; touch-action: pan-y; user-select: none; cursor: grab; transition: transform .24s ease; }
+.card.dragging { transition: none; cursor: grabbing; }
+.tile { position: relative; height: 190px; flex-shrink: 0; border-bottom: 1px solid var(--line); overflow: hidden; }
+.tile svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tile .word { position: absolute; left: 18px; top: 16px; font-family: var(--display); font-size: 48px; font-weight: 800; letter-spacing: -0.03em; line-height: 1; color: var(--text); }
+.tags { position: absolute; left: 14px; bottom: 14px; display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { min-height: 26px; padding: 0 10px; border-radius: 13px; background: rgba(255,255,255,.92); color: #17181C; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; }
+.stamp { position: absolute; top: 18px; padding: 4px 12px; border-radius: 10px; font-weight: 800; font-size: 18px; letter-spacing: .06em; opacity: 0; }
+.stamp.yes { left: 16px; border: 3px solid var(--accent-ink); background: var(--accent); color: var(--accent-ink); transform: rotate(-10deg); }
+.stamp.no { right: 16px; border: 3px solid #17181C; background: #fff; color: #17181C; transform: rotate(10deg); }
+.cbody { flex: 1; min-height: 0; padding: 18px 20px; display: flex; flex-direction: column; gap: 12px; }
+.ctitle { margin: 0; font-size: 26px; line-height: 1.1; color: var(--ink); }
+.cnote { margin: 6px 0 0; font-size: 15px; color: var(--muted); }
+.whybox { background: var(--soft); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.whybox .h { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.wline { display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 1.35; }
+.wline svg { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+.link { margin-top: auto; align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0; background: none; border: none; font-size: 14px; font-weight: 600; color: var(--accent); cursor: pointer; text-decoration: none; }
+.hint { margin: 18px 0 0; text-align: center; font-size: 12px; color: var(--muted); }
+.actions { margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 40px; }
+.act { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.act button { width: 60px; height: 60px; border-radius: 30px; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.act .skip { border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.act .keep { border: none; background: var(--accent); color: var(--accent-ink); }
+/* results */
+.h2 { margin: 28px 0 0; font-size: 36px; line-height: 1.05; color: var(--ink); }
+.list { margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; align-items: center; gap: 14px; width: 100%; padding: 12px; border-radius: 18px; border: 1px solid var(--line); background: var(--surface); color: var(--text); text-align: left; cursor: pointer; text-decoration: none; }
+.thumb { position: relative; width: 56px; height: 56px; border-radius: 14px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--line); }
+.thumb svg { width: 100%; height: 100%; display: block; }
+.row .rt { font-size: 16px; font-weight: 700; display: block; }
+.row .rs { font-size: 13px; color: var(--muted); display: block; margin-top: 3px; }
+.place { min-height: 60px; padding: 10px 14px; gap: 12px; border-radius: 16px; }
+.pin { width: 36px; height: 36px; border-radius: 18px; background: var(--accent-soft); color: var(--accent-soft-ink); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.maps { font-size: 13px; font-weight: 600; color: var(--accent); display: inline-flex; align-items: center; gap: 4px; flex-shrink: 0; }
+.empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; padding: 0 12px; }
+.decided-scroll { flex: 1; overflow-y: auto; margin: 0 -20px; padding: 0 20px 12px; }
+.pickcard { margin-top: 20px; border-radius: 24px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+/* sheet + toast */
+.sheet-wrap { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; flex-direction: column; z-index: 10; }
+.sheet-wrap > .close { flex: 1; background: transparent; border: none; cursor: default; }
+.sheet { background: var(--surface); border-radius: 28px 28px 0 0; padding: 12px 20px 28px; display: flex; flex-direction: column; gap: 10px; max-width: 440px; width: 100%; margin: 0 auto; max-height: 80dvh; overflow-y: auto; }
+.handle { align-self: center; width: 40px; height: 5px; border-radius: 3px; background: var(--line); }
+.toast { position: fixed; left: 50%; bottom: 120px; transform: translateX(-50%); background: var(--accent); color: var(--accent-ink); padding: 12px 18px; border-radius: 999px; font-size: 14px; font-weight: 600; white-space: nowrap; z-index: 20; box-shadow: 0 8px 24px rgba(0,0,0,.35); }
+.back-link { position: absolute; left: 50%; transform: translateX(-50%); bottom: 8px; font-size: 12px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .card, .switch, .switch::after { transition: none !important; } }
+</style>
+</head>
+<body>
+<main id="app" aria-live="polite"></main>
+<script>
+'use strict';
+/* ---------- Icons (24px outline) ---------- */
+var I = {
+  arrowLeft: 'M19 12H5 M12 19l-7-7 7-7', arrowRight: 'M5 12h14 M12 5l7 7-7 7', x: 'M18 6L6 18 M6 6l12 12',
+  check: 'M20 6L9 17l-5-5', shuffle: 'M16 3h5v5 M4 20L21 3 M21 16v5h-5 M15 15l6 6 M4 4l5 5',
+  clock: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20z M12 6v6l4 2',
+  rain: 'M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25 M8 19v2 M8 13v2 M16 19v2 M16 13v2 M12 21v2 M12 15v2',
+  sun: 'M12 7a5 5 0 1 0 0 10a5 5 0 1 0 0-10z M12 1v2 M12 21v2 M4.2 4.2l1.4 1.4 M18.4 18.4l1.4 1.4 M1 12h2 M21 12h2 M4.2 19.8l1.4-1.4 M18.4 5.6l1.4-1.4',
+  cloud: 'M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z',
+  pin: 'M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z M12 7a3 3 0 1 0 0 6a3 3 0 1 0 0-6z',
+  info: 'M12 2a10 10 0 1 0 0 20a10 10 0 1 0 0-20z M12 16v-4 M12 8h.01', chevron: 'M9 18l6-6-6-6', ext: 'M7 17L17 7 M7 7h10v10'
+};
+function ico(name, size, sw) {
+  return '<svg width="' + (size || 20) + '" height="' + (size || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="' + (sw || 2) + '" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + I[name] + '"/></svg>';
+}
+function logo(size) {
+  return '<span class="logo" style="width:' + size + 'px;height:' + size + 'px" aria-hidden="true"><svg viewBox="-9 2 33 33" preserveAspectRatio="xMaxYMax meet">' +
+    '<path fill="#121014" d="M24 2.2C22.6 2.2 21.3 2.4 20.3 2.9L19.3 2.3L18.9 3.9C17.9 4.9 17.3 6.4 17.3 8.2L17.5 10.3C16.3 10 15.7 11.1 15.9 12.3C16.1 13.5 16.9 14.1 17.8 13.9C18.3 15.9 19.9 17.6 21.9 18.3L22 20.3C19.4 20.7 16.1 21.3 14.2 22.4L12.6 46H24Z M7.8 25.3L1.7 24.6C0.6 24.5 0.4 22.9 1.5 22.8L5.3 22.5L6.3 20.4C6.7 19.6 7.9 19.9 7.7 20.8L7.6 22.7Z"/>' +
+    '<path d="M15.4 23.9L9.4 31.4L6.9 24" fill="none" stroke="#121014" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>';
+}
+
+/* ---------- Card scenes (style G) ---------- */
+var L = '#F6F2F5', A = '#FF5FA2', B = '#1E1B21';
+var SCENES = {
+  water: '<circle cx="232" cy="56" r="28" fill="' + A + '"/><path d="M0 118 Q60 92 120 112 T240 108 T300 104 V190 H0Z" fill="' + L + '" fill-opacity="0.1"/><path d="M30 140c12 0 12-8 24-8s12 8 24 8 12-8 24-8 12 8 24 8 M150 158c12 0 12-8 24-8s12 8 24 8 12-8 24-8 12 8 24 8 M60 172c12 0 12-8 24-8s12 8 24 8" fill="none" stroke="' + L + '" stroke-width="4" stroke-linecap="round"/>',
+  park: '<circle cx="240" cy="50" r="24" fill="' + A + '"/><path d="M0 145 Q90 112 180 132 T300 122 V190 H0Z" fill="' + L + '" fill-opacity="0.1"/><rect x="166" y="100" width="7" height="40" rx="3" fill="' + L + '"/><circle cx="169.5" cy="92" r="24" fill="' + L + '"/><rect x="232" y="114" width="6" height="28" rx="3" fill="' + L + '"/><circle cx="235" cy="108" r="16" fill="' + A + '"/>',
+  games: '<g transform="translate(60 22) scale(0.85)"><g transform="rotate(-12 115 100)"><rect x="70" y="55" width="90" height="90" rx="18" fill="' + A + '"/><circle cx="95" cy="80" r="8" fill="' + B + '"/><circle cx="135" cy="120" r="8" fill="' + B + '"/><circle cx="115" cy="100" r="8" fill="' + B + '"/></g><g transform="rotate(14 195 105)"><rect x="160" y="70" width="76" height="76" rx="16" fill="' + L + '"/><circle cx="180" cy="90" r="7" fill="' + B + '"/><circle cx="216" cy="90" r="7" fill="' + B + '"/><circle cx="180" cy="126" r="7" fill="' + B + '"/><circle cx="216" cy="126" r="7" fill="' + B + '"/></g></g>',
+  snow: '<circle cx="250" cy="48" r="20" fill="' + A + '"/><path d="M90 190 L180 76 L230 136 L255 112 L310 190Z" fill="' + L + '"/><path d="M180 76 L160 101 L173 97 L180 108 L190 95 L201 101Z" fill="' + A + '"/><circle cx="150" cy="40" r="3" fill="' + L + '"/><circle cx="200" cy="30" r="3" fill="' + L + '"/><circle cx="280" cy="95" r="3" fill="' + L + '"/><circle cx="130" cy="120" r="3" fill="' + L + '"/>',
+  food: '<ellipse cx="180" cy="156" rx="52" ry="8" fill="' + L + '" fill-opacity="0.15"/><path d="M146 96h68v42a16 16 0 0 1-16 16h-36a16 16 0 0 1-16-16z" fill="' + L + '"/><path d="M214 106h8a12 12 0 0 1 0 24h-8" fill="none" stroke="' + L + '" stroke-width="7"/><path d="M164 84c0-8 8-8 8-16 M184 84c0-8 8-8 8-16" fill="none" stroke="' + A + '" stroke-width="4" stroke-linecap="round"/><path d="M236 154 L292 154 L292 112 Z" fill="' + A + '"/><path d="M236 154 L292 112 L292 122 L249 154Z" fill="' + L + '" fill-opacity="0.5"/>',
+  screen: '<rect x="118" y="44" width="164" height="98" rx="10" fill="none" stroke="' + L + '" stroke-width="6"/><path d="M188 74 L218 93 L188 112Z" fill="' + A + '"/><path d="M200 142v18 M170 164h60" fill="none" stroke="' + L + '" stroke-width="6" stroke-linecap="round"/>',
+  party: '<path d="M200 40v62 M200 40l34-8v60" fill="none" stroke="' + L + '" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><ellipse cx="190" cy="104" rx="13" ry="10" fill="' + L + '"/><ellipse cx="224" cy="94" rx="13" ry="10" fill="' + L + '"/><circle cx="140" cy="60" r="6" fill="' + A + '"/><circle cx="270" cy="130" r="8" fill="' + A + '"/><circle cx="150" cy="150" r="5" fill="' + L + '"/><rect x="262" y="48" width="10" height="10" rx="2" transform="rotate(20 267 53)" fill="' + A + '"/><rect x="120" y="112" width="10" height="10" rx="2" transform="rotate(-15 125 117)" fill="' + A + '"/><path d="M60 170 Q120 120 180 165 T300 160" fill="none" stroke="' + A + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 12"/>',
+  building: '<path d="M128 78 L210 40 L292 78Z" fill="' + A + '"/><rect x="140" y="86" width="14" height="56" rx="3" fill="' + L + '"/><rect x="174" y="86" width="14" height="56" rx="3" fill="' + L + '"/><rect x="232" y="86" width="14" height="56" rx="3" fill="' + L + '"/><rect x="266" y="86" width="14" height="56" rx="3" fill="' + L + '"/><rect x="128" y="148" width="164" height="10" rx="3" fill="' + L + '"/>',
+  sport: '<path d="M150 150V60h130v90" fill="none" stroke="' + L + '" stroke-width="5" stroke-linejoin="round" stroke-opacity="0.5"/><circle cx="214" cy="118" r="30" fill="' + L + '"/><path d="M214 103l13 9-5 15h-16l-5-15z" fill="' + A + '"/><path d="M120 108h40 M110 124h46 M126 140h30" fill="none" stroke="' + A + '" stroke-width="5" stroke-linecap="round"/>'
+};
+function scene(kind) {
+  return '<svg class="scene" viewBox="0 0 300 190" preserveAspectRatio="xMaxYMid slice" aria-hidden="true"><rect width="300" height="190" fill="' + B + '"/>' + (SCENES[kind] || SCENES.park) + '</svg>';
+}
+
+/* ---------- Activities ---------- */
+var ALL = ['tots', 'kids', 'teens', 'adults'], NO_TOTS = ['kids', 'teens', 'adults'];
+var COST = ['Free', '£', '££'];
+var IDEAS = [
+  { id: 'games', title: 'Board game afternoon', note: 'Everyone round one table, no screens.', look: ['games', 'Games'], io: 'in', len: '1–2 hrs', hours: 1.5, energy: 0, ages: NO_TOTS, cost: 0, wet: true },
+  { id: 'bake', food: true, title: 'Bake something together', note: 'Little hands stir, bigger ones lead.', look: ['food', 'Bake'], io: 'in', len: '1–2 hrs', hours: 1.5, energy: 1, ages: ALL, cost: 1, wet: true },
+  { id: 'coffee', food: true, title: 'Coffee and cake out', note: 'A quick change of scene and a treat.', look: ['food', 'Coffee'], io: 'out', len: 'Under 1 hr', hours: 1, energy: 1, ages: ALL, cost: 1, wet: true, rainNote: 'Indoors once you’re there', q: 'cafe' },
+  { id: 'puddles', title: 'Puddle walk in wellies', note: 'Splash first, hot chocolate after.', look: ['park', 'Splash'], io: 'out', len: 'Under 1 hr', hours: 1, energy: 2, ages: ['tots', 'kids', 'adults'], cost: 0, wet: true, daylight: true, rainNote: 'The rain is the whole point', dryNote: 'Best after a downpour', q: 'park' },
+  { id: 'lake', title: 'Walk around a lake', note: 'Loop the water and count the geese.', look: ['water', 'Lake'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 1, ages: ALL, cost: 0, wet: true, daylight: true, rainNote: 'Fine in light rain with a brolly', q: 'lake walk' },
+  { id: 'dance', title: 'Living-room dance-off', note: 'Pick the playlist, push back the sofa.', look: ['party', 'Dance'], io: 'in', len: 'Under 1 hr', hours: 0.5, energy: 3, ages: ALL, cost: 0, wet: true },
+  { id: 'fort', title: 'Blanket fort film night', note: 'Build it together, then pick a film.', look: ['screen', 'Film'], io: 'in', len: '2–3 hrs', hours: 2.5, energy: 0, ages: ALL, cost: 0, wet: true, link: { label: 'Pick a film with What2Watch', url: 'https://scentlessalgar.github.io/watch-picker/' } },
+  { id: 'library', title: 'Library visit', note: 'Warm, quiet, and everyone picks a book.', look: ['building', 'Books'], io: 'out', len: 'About 1 hr', hours: 1, energy: 1, ages: ALL, cost: 0, wet: true, noEvening: true, rainNote: 'Indoors once you’re there', q: 'library' },
+  { id: 'museum', title: 'Museum or gallery trip', note: 'Plenty of free ones, all under a roof.', look: ['building', 'Museum'], io: 'out', len: 'Half day', hours: 4, energy: 1, ages: ALL, cost: 0, wet: true, noEvening: true, rainNote: 'Indoors once you’re there', q: 'museum' },
+  { id: 'climb', title: 'Indoor climbing', note: 'Burns off energy when outside is grey.', look: ['snow', 'Climb'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 3, ages: NO_TOTS, cost: 2, wet: true, rainNote: 'Indoors once you’re there', q: 'indoor climbing' },
+  { id: 'trampoline', title: 'Trampoline park', note: 'Bounce until someone needs a sit down.', look: ['party', 'Bounce'], io: 'out', len: 'About 1 hr', hours: 1, energy: 3, ages: ALL, cost: 2, wet: true, rainNote: 'Indoors once you’re there', q: 'trampoline park' },
+  { id: 'gaming', title: 'Video game tournament', note: 'Brackets, snacks, a trophy for the winner.', look: ['screen', 'Gaming'], io: 'in', len: '1–2 hrs', hours: 1.5, energy: 0, ages: NO_TOTS, cost: 0, wet: true },
+  { id: 'picnic', food: true, title: 'Picnic in the park', note: 'Best saved for a dry day.', look: ['park', 'Picnic'], io: 'out', len: '2–3 hrs', hours: 2, energy: 1, ages: ALL, cost: 1, wet: false, daylight: true, q: 'park' },
+  { id: 'cinema', title: 'Cinema trip', note: 'Big screen, bigger popcorn.', look: ['screen', 'Cinema'], io: 'out', len: '2–3 hrs', hours: 2.5, energy: 0, ages: ALL, cost: 2, wet: true, rainNote: 'Indoors once you’re there', q: 'cinema' },
+  { id: 'bowling', title: 'Ten-pin bowling', note: 'Easy for all abilities, loud and silly.', look: ['sport', 'Bowling'], io: 'out', len: 'About 1 hr', hours: 1, energy: 2, ages: NO_TOTS, cost: 2, wet: true, rainNote: 'Indoors once you’re there', q: 'bowling alley' },
+  { id: 'snow', title: 'Ski, snowboard or sledge', note: 'Real snow, indoors, all year round.', look: ['snow', 'Snow'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 3, ages: ALL, cost: 2, wet: true, rainNote: 'Indoors, so no weather to worry about', q: 'indoor ski slope' },
+  { id: 'gym', title: 'Hit the gym', note: 'Get the heart going, then a well-earned rest.', look: ['sport', 'Gym'], io: 'out', len: 'About 1 hr', hours: 1, energy: 3, ages: ['teens', 'adults'], cost: 0, needs: 'a gym membership', wet: true, rainNote: 'Indoors once you’re there', q: 'gym' },
+  { id: 'centre', food: true, title: 'Shopping centre stroll and cake', note: 'A wander, a window-shop, then coffee and cake.', look: ['food', 'Shop'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 1, ages: ALL, cost: 1, wet: true, rainNote: 'All under one roof', q: 'shopping centre' },
+  { id: 'gullivers', title: 'Gulliver’s Land', note: 'Rides and play areas made for younger kids.', look: ['party', 'Rides'], io: 'out', len: 'Half day+', hours: 4, energy: 2, ages: ['tots', 'kids', 'adults'], cost: 2, wet: false, season: [3, 10], q: 'theme park' },
+  { id: 'pedalos', title: 'Pedalos on the lake', note: 'Pedal out, swap captains, try not to splash.', look: ['water', 'Pedalos'], io: 'out', len: 'About 1 hr', hours: 1, energy: 2, ages: ALL, cost: 1, wet: false, daylight: true, season: [4, 9], q: 'pedalo hire' },
+  { id: 'bike', title: 'Family bike ride', note: 'Traffic-free paths and a snack stop halfway.', look: ['park', 'Ride'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 2, ages: NO_TOTS, cost: 0, needs: 'bikes', wet: false, daylight: true, q: 'cycle path park' },
+  { id: 'arcade', title: 'Arcade games', note: 'Coin pushers, air hockey and a dance-off.', look: ['games', 'Arcade'], io: 'out', len: 'About 1 hr', hours: 1, energy: 1, ages: NO_TOTS, cost: 1, wet: true, rainNote: 'Indoors once you’re there', q: 'arcade' },
+  { id: 'vr', title: 'Virtual reality experience', note: 'Headsets on: zombies, space or a plank walk.', look: ['screen', 'VR'], io: 'out', len: 'About 1 hr', hours: 1, energy: 2, ages: NO_TOTS, cost: 2, wet: true, rainNote: 'Indoors once you’re there', q: 'virtual reality experience' },
+  { id: 'parkwalk', title: 'Walk in the park', note: 'Fresh air, a big view and a bench to sit on.', look: ['park', 'Walk'], io: 'out', len: 'About 1 hr', hours: 1, energy: 1, ages: ALL, cost: 0, wet: true, daylight: true, rainNote: 'Fine in light rain with a brolly', q: 'park' },
+  { id: 'dessert', food: true, title: 'Out for dessert', note: 'Waffles, sundaes or a giant cookie.', look: ['food', 'Dessert'], io: 'out', len: 'Under 1 hr', hours: 1, energy: 0, ages: ALL, cost: 1, wet: true, rainNote: 'Indoors once you’re there', q: 'dessert parlour' },
+  { id: 'hideseek', title: 'Hide and seek', note: 'Count to 50, no peeking, no hiding in the bins.', look: ['park', 'Hide'], io: 'both', len: '30 mins', hours: 0.5, energy: 2, ages: ['tots', 'kids', 'adults'], cost: 0, wet: true },
+  { id: 'goalie', title: 'Beat the goalie', note: 'Jumpers for goalposts, best of five penalties.', look: ['sport', 'Goal!'], io: 'out', len: '30 mins', hours: 0.5, energy: 2, ages: NO_TOTS, cost: 0, needs: 'a garden and a ball', wet: true, daylight: true, rainNote: 'A bit of drizzle never stopped a penalty' },
+  { id: 'swim', title: 'Go swimming', note: 'Lengths for some, splashing for others.', look: ['water', 'Swim'], io: 'out', len: '1–2 hrs', hours: 1.5, energy: 3, ages: ALL, cost: 1, wet: true, rainNote: 'You’ll be wet anyway', q: 'swimming pool' }
+];
+var SURPRISE = ['fort', 'snow', 'lake', 'hideseek', 'dessert', 'arcade', 'puddles', 'swim', 'centre', 'vr', 'games', 'dance', 'coffee', 'bake', 'trampoline', 'library', 'gaming', 'cinema', 'climb', 'bowling', 'parkwalk'];
+
+/* Milton Keynes example places (approximate coordinates). Outside MK the app falls back to a Google Maps search. */
+var MK = { lat: 52.0406, lon: -0.7594 };
+var PLACES = {
+  lake: [['Willen Lake', 52.0596, -0.7232], ['Furzton Lake', 52.0119, -0.7745], ['Tongwell Lake', 52.0705, -0.7135], ['Caldecotte Lake', 52.0048, -0.7202]],
+  puddles: [['Campbell Park', 52.0441, -0.7451], ['Howe Park Wood', 52.0143, -0.7883], ['Ouzel Valley Park', 52.0243, -0.7317]],
+  picnic: [['Campbell Park', 52.0441, -0.7451], ['Willen Lake', 52.0596, -0.7232], ['Great Linford Manor Park', 52.0686, -0.7663]],
+  parkwalk: [['Campbell Park', 52.0441, -0.7451], ['Great Linford Manor Park', 52.0686, -0.7663], ['Howe Park Wood', 52.0143, -0.7883]],
+  library: [['Milton Keynes Central Library', 52.0423, -0.7558]],
+  museum: [['MK Gallery', 52.0419, -0.7487], ['Milton Keynes Museum', 52.0712, -0.8177]],
+  snow: [['Snozone, Xscape Milton Keynes', 52.0397, -0.7499]],
+  centre: [['centre:mk', 52.0433, -0.7592]],
+  gullivers: [['Gulliver’s Land', 52.0560, -0.7286]],
+  pedalos: [['Willen Lake', 52.0596, -0.7232]],
+  bike: [['Tattenhoe Park', 52.0012, -0.8011], ['Willen Lake', 52.0596, -0.7232], ['Campbell Park', 52.0441, -0.7451]],
+  arcade: [['Xscape Milton Keynes', 52.0397, -0.7499]],
+  cinema: [['Cineworld, Xscape', 52.0397, -0.7499], ['Odeon, Stadium MK', 52.0097, -0.7336]]
+};
+
+/* ---------- Questions ---------- */
+var WHO = [{ v: 'adults', label: 'Adults', sub: '18+' }, { v: 'teens', label: 'Teens', sub: '12–17' }, { v: 'kids', label: 'Big kids', sub: '5–11' }, { v: 'tots', label: 'Little kids', sub: '0–4' }];
+var WHO_SHORT = { adults: 'adults', teens: 'teens', kids: 'big kids', tots: 'little kids' };
+var ENERGY = [{ v: 0, label: 'Sofa mode', sub: 'Cosy, low effort' }, { v: 1, label: 'Happy to potter', sub: 'Gentle pace' }, { v: 2, label: 'Let’s get moving', sub: 'Up and about' }, { v: 3, label: 'Feel the burn', sub: 'Proper exercise' }];
+var ENERGY_WHY = ['Low effort, maximum cosy', 'A gentle pace', 'Gets everyone moving', 'A proper workout'];
+var QS = [
+  { key: 'who', title: 'Who’s joining in?', why: 'So everyone can actually take part. Pick all that apply.', multi: true },
+  { key: 'energy', title: 'How’s everyone feeling?', why: 'So a lazy afternoon doesn’t get a climbing wall.' },
+  { key: 'io', title: 'Staying in or heading out?', why: 'So we don’t suggest a trip out once the slippers are on.' },
+  { key: 'when', title: 'When are we doing this?', why: 'So suggestions fit the time left, the light and opening hours.' }
+];
+var PERIODS = { morning: { label: 'morning', from: 9, to: 12 }, afternoon: { label: 'afternoon', from: 12, to: 17 }, evening: { label: 'evening', from: 17, to: 21 }, allday: { label: 'day', from: 9, to: 21 } };
+var PHRASES = [
+  'Who’s your daddy, and what should we do?',
+  'Red pill, blue pill. Choose.',
+  'Choose, or do not choose. There is no try.',
+  'My name is Inigo Montoya. You killed my father. Prepare to choose.',
+  'In space, no one can hear you choose.'
+];
+/* Rough UK sunset by month, used until the weather service answers */
+var SUNSET_BY_MONTH = [16.3, 17.1, 18.0, 19.9, 20.7, 21.3, 21.2, 20.5, 19.4, 18.3, 16.5, 15.9];
+
+/* ---------- State ---------- */
+var S = {
+  screen: 'splash', phrase: Math.floor(Math.random() * PHRASES.length), step: 0,
+  a: blank(), mode: 'questions', deck: [], hidden: {}, idx: 0, shortlist: [], pick: null,
+  sheet: null, toast: null, dx: 0
+};
+var LOC = { lat: MK.lat, lon: MK.lon, mine: false, asking: false, label: 'Milton Keynes' };
+var WX = null, WX_FAILED = false;
+function blank() { return { who: [], energy: null, io: null, when: null, peckish: false }; }
+
+/* ---------- Time, weather, location ---------- */
+function nowH() { var d = new Date(); return d.getHours() + d.getMinutes() / 60; }
+function clock(h) { var hh = Math.floor(h), mm = Math.round((h - hh) * 60); if (mm === 60) { hh++; mm = 0; } var ap = hh >= 12 ? 'pm' : 'am'; var h12 = hh % 12 === 0 ? 12 : hh % 12; return h12 + (mm ? ':' + (mm < 10 ? '0' : '') + mm : '') + ap; }
+function dayName() { return ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][new Date().getDay()]; }
+function sunset() { return WX && WX.sunset ? WX.sunset : SUNSET_BY_MONTH[new Date().getMonth()]; }
+function periodAt(h) { return h < 12 ? 'morning' : h < 17 ? 'afternoon' : 'evening'; }
+function hoursText(x) { return x >= 1.75 ? 'about ' + Math.round(x) + ' hours' : x >= 0.75 ? 'about an hour' : 'under an hour'; }
+function slot(when) {
+  var h = nowH(), isNow = !when || when === 'now';
+  var p = isNow ? periodAt(h) : when, P = PERIODS[p];
+  var start = isNow ? Math.max(h, P.from) : P.from;
+  var cap = Math.max(P.to - start, isNow ? 1.5 : 0);
+  return { period: p, start: start, cap: cap, dark: start >= sunset() - 0.25 || p === 'evening', late: start >= 17, daylightLeft: Math.max(0, sunset() - start), isNow: isNow };
+}
+function isWetCode(c) { return (c >= 51 && c <= 67) || (c >= 71 && c <= 86) || c >= 95; }
+function wxText(c) {
+  if (c === 0) return 'Clear'; if (c <= 2) return 'Partly cloudy'; if (c === 3) return 'Cloudy'; if (c <= 48) return 'Foggy';
+  if (c <= 57) return 'Drizzle'; if (c === 61) return 'Light rain'; if (c === 63) return 'Rain'; if (c <= 67) return 'Heavy rain';
+  if (c <= 77) return 'Snow'; if (c <= 82) return 'Showers'; if (c <= 86) return 'Snow showers'; return 'Thunderstorms';
+}
+function wetAt(startH) {
+  if (!WX) return false;
+  if (startH - nowH() < 1) return isWetCode(WX.code);
+  var hr = Math.floor(startH);
+  for (var i = 0; i < WX.hourly.length; i++) if (WX.hourly[i].h === hr) return isWetCode(WX.hourly[i].code) || WX.hourly[i].prob >= 60;
+  return isWetCode(WX.code);
+}
+function loadWeather() {
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + LOC.lat.toFixed(3) + '&longitude=' + LOC.lon.toFixed(3) +
+    '&current=temperature_2m,weather_code&hourly=weather_code,precipitation_probability&daily=sunset&timezone=auto&forecast_days=1';
+  return fetch(url).then(function (r) { if (!r.ok) throw new Error('weather'); return r.json(); }).then(function (j) {
+    var ss = j.daily && j.daily.sunset && j.daily.sunset[0];
+    WX = {
+      temp: Math.round(j.current.temperature_2m), code: j.current.weather_code,
+      sunset: ss ? parseInt(ss.slice(11, 13), 10) + parseInt(ss.slice(14, 16), 10) / 60 : null,
+      hourly: (j.hourly.time || []).map(function (t, i) { return { h: parseInt(t.slice(11, 13), 10), code: j.hourly.weather_code[i], prob: j.hourly.precipitation_probability[i] || 0 }; })
+    };
+    WX_FAILED = false; render();
+  }).catch(function () { WX_FAILED = true; render(); });
+}
+function askLocation() {
+  if (!navigator.geolocation) { toast('Location isn’t available on this device'); return; }
+  LOC.asking = true; render();
+  navigator.geolocation.getCurrentPosition(function (pos) {
+    LOC = { lat: pos.coords.latitude, lon: pos.coords.longitude, mine: true, asking: false, label: 'Near you' };
+    try { localStorage.setItem('chooser-loc', 'yes'); } catch (e) {}
+    loadWeather(); render();
+  }, function () {
+    LOC.asking = false;
+    try { localStorage.removeItem('chooser-loc'); } catch (e) {}
+    toast('No problem, using Milton Keynes'); render();
+  }, { timeout: 10000, maximumAge: 600000 });
+}
+function milesBetween(a, b, c, d) {
+  var R = 3958.8, toR = Math.PI / 180, dLat = (c - a) * toR, dLon = (d - b) * toR;
+  var x = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a * toR) * Math.cos(c * toR) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+function farFromMK() { return milesBetween(LOC.lat, LOC.lon, MK.lat, MK.lon) > 25; }
+function mapsSearch(q) { return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q); }
+function placesFor(i) {
+  var named = PLACES[i.id];
+  if (named && !farFromMK()) {
+    return named.map(function (p) {
+      var road = milesBetween(LOC.lat, LOC.lon, p[1], p[2]) * 1.3;
+      var mins = Math.max(3, Math.round(road / 22 * 60 + 3));
+      return { name: p[0], road: road, meta: 'About ' + (road < 1 ? road.toFixed(1) : Math.round(road)) + ' mi · ' + mins + ' min drive', url: mapsSearch(p[0] + ', Milton Keynes') };
+    }).sort(function (x, y) { return x.road - y.road; });
+  }
+  if (i.q) return [{ name: (i.q.charAt(0).toUpperCase() + i.q.slice(1)) + ' near you', meta: 'Opens a Google Maps search', url: mapsSearch(i.q + ' near me'), search: true }];
+  return [];
+}
+
+/* ---------- Filtering ---------- */
+function inSeason(i) { if (!i.season) return true; var m = new Date().getMonth() + 1; return m >= i.season[0] && m <= i.season[1]; }
+function matches(i, a) {
+  for (var k = 0; k < a.who.length; k++) if (i.ages.indexOf(a.who[k]) === -1) return false;
+  if (a.energy !== null && Math.abs(i.energy - a.energy) > 1) return false;
+  if (a.io === 'in' && i.io === 'out') return false;
+  if (a.io === 'out' && i.io === 'in') return false;
+  if (a.when && i.hours > slot(a.when).cap) return false;
+  return true;
+}
+function build(mode, a) {
+  var sl = slot(mode === 'surprise' ? 'now' : (a.when || 'now'));
+  var wet = wetAt(sl.start);
+  var hidden = { rain: 0, dark: 0, closed: 0, season: 0 };
+  var base = mode === 'surprise'
+    ? SURPRISE.map(function (id) { return IDEAS.filter(function (i) { return i.id === id; })[0]; }).filter(function (i) { return i.hours <= Math.max(sl.cap, 1); })
+    : IDEAS.filter(function (i) { return matches(i, a); });
+  var list = base.filter(function (i) {
+    if (!inSeason(i)) { hidden.season++; return false; }
+    if (wet && !i.wet) { hidden.rain++; return false; }
+    if (sl.dark && i.daylight) { hidden.dark++; return false; }
+    if (sl.late && i.noEvening) { hidden.closed++; return false; }
+    return true;
+  });
+  if (a && a.peckish) list = list.filter(function (i) { return i.food; }).concat(list.filter(function (i) { return !i.food; }));
+  return { deck: list.slice(0, 10).map(function (i) { return i.id; }), hidden: hidden, wet: wet };
+}
+function idea(id) { return IDEAS.filter(function (i) { return i.id === id; })[0]; }
+function whyFor(i) {
+  var a = S.a, sl = slot(S.mode === 'surprise' ? 'now' : (a.when || 'now')), wet = wetAt(sl.start), why = [];
+  if (i.io === 'in') why.push(wet ? 'Indoors, so the rain won’t matter' : 'Easy to do at home');
+  else if (i.io === 'both') why.push(wet ? 'Works indoors if it’s wet' : 'Works at home or outside');
+  else why.push(wet ? (i.rainNote || 'Mostly under cover') : (WX ? (i.dryNote || 'Dry out there' + (sl.isNow ? ' right now' : ' then')) : (i.rainNote || 'Good in most weather')));
+  if (a.peckish && i.food) why.push('Sorts out the peckish problem');
+  var whenWhy = sl.isNow ? ((i.daylight && !sl.dark && sl.daylightLeft < 4) ? 'Done before it gets dark' : 'Fits the time left this ' + PERIODS[sl.period].label)
+    : a.when === 'allday' ? 'Plenty of time today' : 'Good for this ' + PERIODS[a.when].label;
+  if (S.mode === 'surprise') { why.push(whenWhy); why.push(ENERGY_WHY[i.energy]); }
+  else {
+    if (a.energy !== null) why.push(ENERGY_WHY[i.energy]);
+    if (a.who.length) why.push('Works for ' + joinList(a.who.map(function (v) { return WHO_SHORT[v]; })));
+    if (a.when) why.push(whenWhy);
+  }
+  return why.slice(0, 4);
+}
+function joinList(arr) { return arr.length <= 1 ? (arr[0] || '') : arr.slice(0, -1).join(', ') + ' and ' + arr[arr.length - 1]; }
+
+/* ---------- Rendering ---------- */
+function render() {
+  var html = ({ splash: vSplash, home: vHome, questions: vQuestions, cards: vCards, results: vResults, decided: vDecided })[S.screen]();
+  if (S.sheet) html += vSheet();
+  if (S.toast) html += '<div class="toast" role="status">' + S.toast + '</div>';
+  document.getElementById('app').innerHTML = html;
+  if (S.screen === 'cards') bindSwipe();
+}
+function vSplash() {
+  return '<section class="screen splash">' +
+    '<div class="brand">' + logo(32) + 'Chooser</div><div class="grow"></div>' +
+    '<button class="phrase" data-act="enter"><span class="big">' + PHRASES[S.phrase] + '</span>' +
+    '<span class="go"><span class="go-dot">' + ico('arrowRight', 24, 2.2) + '</span>Tap to get started</span></button>' +
+    '<div class="grow"></div><button class="chip-btn" data-act="phrase">' + ico('shuffle', 18) + 'Give me another line</button>' +
+    (/github\.io$/.test(location.hostname) ? '<a class="back-link" href="https://scentlessalgar.github.io/" style="position:static;transform:none;margin-top:16px;align-self:center;color:var(--muted)">← All projects</a>' : '') + '</section>';
+}
+function weatherChip() {
+  if (WX) return '<span class="chip">' + ico(isWetCode(WX.code) ? 'rain' : WX.code <= 1 ? 'sun' : 'cloud', 15) + wxText(WX.code) + ', ' + WX.temp + '°C</span>';
+  return '<span class="chip">' + ico('cloud', 15) + (WX_FAILED ? 'Weather unavailable' : 'Checking the weather…') + '</span>';
+}
+function vHome() {
+  var locChip = LOC.mine ? '<span class="chip">' + ico('pin', 15) + 'Near you</span>'
+    : '<button class="chip" data-act="loc">' + ico('pin', 15) + (LOC.asking ? 'Finding you…' : 'Milton Keynes · use my location') + '</button>';
+  return '<section class="screen">' +
+    '<div class="topbar"><div class="brand">' + logo(32) + 'Chooser</div></div>' +
+    '<h1 class="display" style="margin:10px 0 18px;font-size:44px;line-height:1.02;color:var(--ink)">Let’s choose</h1>' +
+    '<div class="context"><div class="chips"><span class="chip">' + ico('clock', 15) + dayName() + ' ' + clock(nowH()) + '</span>' + weatherChip() + locChip + '</div>' +
+    '<p class="muted" style="margin:0;font-size:12px">' + (LOC.mine ? 'Used to tailor ideas. Your location isn’t stored or shared.' : 'Used to tailor ideas. Your location is only used if you tap, and isn’t stored.') + '</p></div>' +
+    '<div class="grow" style="min-height:24px"></div>' +
+    '<button class="big-btn" data-act="start"><span><span class="t">What shall we do?</span><span class="s">4 quick taps, then swipe</span></span><span class="arrow">' + ico('arrowRight', 22, 2.2) + '</span></button>' +
+    '<button class="alt-btn" data-act="surprise"><span><span class="t">Surprise me</span><span class="s">No questions. Based on the weather and time.</span></span><span class="ico">' + ico('shuffle', 20) + '</span></button>' +
+    '</section>';
+}
+function whenOptions() {
+  var h = nowH(), cur = slot('now');
+  var opts = [{ v: 'now', label: 'Right now', sub: 'This ' + PERIODS[cur.period].label + ', ' + hoursText(Math.max(0, PERIODS[cur.period].to - cur.start)) + ' left' }];
+  ['morning', 'afternoon', 'evening'].forEach(function (p) { if (p !== cur.period && PERIODS[p].from > h) opts.push({ v: p, label: 'This ' + PERIODS[p].label, sub: 'From ' + clock(PERIODS[p].from) }); });
+  if (h < 10) opts.push({ v: 'allday', label: 'All day', sub: '9am to 9pm' });
+  return opts;
+}
+function vQuestions() {
+  var q = QS[S.step], a = S.a;
+  var opts = q.key === 'who' ? WHO : q.key === 'energy' ? ENERGY : q.key === 'io' ? [{ v: 'in', label: 'Stay in' }, { v: 'out', label: 'Head out' }] : whenOptions();
+  var prog = QS.map(function (x, i) { return '<span class="' + (i <= S.step ? 'on' : '') + '"></span>'; }).join('');
+  var optHtml = opts.map(function (o) {
+    var sel = q.multi ? a.who.indexOf(o.v) !== -1 : a[q.key] === o.v;
+    return '<button class="opt' + (sel ? ' sel' : '') + '" data-act="opt" data-v="' + o.v + '" aria-pressed="' + sel + '"><span>' + o.label + (o.sub ? '<span class="sub">' + o.sub + '</span>' : '') + '</span><span class="dot">' + ico('check', 14, 3) + '</span></button>';
+  }).join('');
+  var peck = q.key === 'energy' ? '<button class="peck" data-act="peck" aria-pressed="' + a.peckish + '"><span><span style="display:block;font-size:16px;font-weight:600">Peckish too?</span><span class="muted" style="display:block;font-size:13px;margin-top:2px">We’ll put food stops first</span></span><span class="switch"></span></button>' : '';
+  return '<section class="screen">' +
+    '<div class="topbar"><button class="round" data-act="qback" aria-label="Back">' + ico('arrowLeft') + '</button><div class="progress">' + prog + '</div>' +
+    '<button class="btn btn-ghost" style="padding:0 6px;font-size:14px" data-act="qskip">Skip</button></div>' +
+    '<p class="eyebrow">Question ' + (S.step + 1) + ' of ' + QS.length + '</p><h2 class="display qtitle">' + q.title + '</h2>' +
+    '<div class="why">' + ico('info', 16) + '<span>' + q.why + '</span></div>' + peck +
+    '<div class="options">' + optHtml + '</div><div class="grow" style="min-height:20px"></div>' +
+    (q.multi ? '<button class="btn btn-primary" data-act="qnext">' + (a.who.length ? 'Continue' : 'Anyone, continue') + '</button>' : '') +
+    '</section>';
+}
+function hiddenText() {
+  var h = S.hidden, parts = [], n = function (x) { return x + (x === 1 ? ' idea' : ' ideas'); };
+  if (h.rain) parts.push(n(h.rain) + ' hidden because it’s wet');
+  if (h.dark) parts.push(n(h.dark) + ' hidden because it’ll be dark');
+  if (h.closed) parts.push(n(h.closed) + ' hidden: closed by then');
+  if (h.season) parts.push(n(h.season) + ' closed for the season');
+  return parts.join(' · ');
+}
+function cardLink(i, cls) {
+  var p = placesFor(i);
+  if (p.length > 1) return '<button class="' + cls + '" data-act="places" data-id="' + i.id + '">' + p.length + ' places nearby ' + ico('arrowRight', 16) + '</button>';
+  if (p.length === 1) return '<a class="' + cls + '" href="' + p[0].url + '" target="_blank" rel="noopener">' + (p[0].search ? 'Find on Google Maps' : p[0].name + ' · ' + p[0].meta.replace('About ', '')) + ' ' + ico('ext', 16) + '</a>';
+  if (i.link) return '<a class="' + cls + '" href="' + i.link.url + '" target="_blank" rel="noopener">' + i.link.label + ' ' + ico('ext', 16) + '</a>';
+  return '';
+}
+function vCards() {
+  var len = S.deck.length, i = idea(S.deck[Math.min(S.idx, len - 1)]);
+  var ht = hiddenText();
+  var note = i.needs ? i.note + ' Needs ' + i.needs + '.' : i.note;
+  return '<section class="screen">' +
+    '<div class="topbar"><button class="round" data-act="home" aria-label="Back to home">' + ico('arrowLeft') + '</button>' +
+    '<div style="text-align:center"><div style="font-size:15px;font-weight:700;color:var(--ink)">' + (S.mode === 'surprise' ? 'Surprise picks' : 'Your ideas') + '</div><div class="muted" style="font-size:12px">' + Math.min(S.idx + 1, len) + ' of ' + len + '</div></div>' +
+    '<span style="width:44px"></span></div>' +
+    (ht ? '<div class="banner">' + ico('info', 15) + '<span>' + ht + '</span></div>' : '') +
+    '<div class="stack">' + (S.idx + 1 < len ? '<div class="ghost"></div>' : '') +
+    '<article class="card" id="card" aria-label="' + i.title + '">' +
+    '<div class="tile">' + scene(i.look[0]) + '<span class="word" aria-hidden="true">' + i.look[1] + '</span>' +
+    '<div class="tags"><span class="tag">' + (PLACES[i.id] && !farFromMK() ? PLACES[i.id][0][0].split(',')[0] : i.io === 'in' ? 'At home' : i.io === 'both' ? 'Home or out' : 'Out and about') + '</span><span class="tag">' + i.len + '</span><span class="tag">' + COST[i.cost] + '</span></div>' +
+    '<span class="stamp yes" id="stampYes">SHORTLIST</span><span class="stamp no" id="stampNo">SKIP</span></div>' +
+    '<div class="cbody"><div><h3 class="display ctitle">' + i.title + '</h3><p class="cnote">' + note + '</p></div>' +
+    '<div class="whybox"><div class="h">' + ico('info', 14) + 'Why this?</div>' + whyFor(i).map(function (w) { return '<div class="wline">' + ico('check', 16, 2.5) + '<span>' + w + '</span></div>'; }).join('') + '</div>' +
+    cardLink(i, 'link') + '</div></article></div>' +
+    '<p class="hint">Swipe right to shortlist, left to skip</p>' +
+    '<div class="actions"><div class="act"><button class="skip" data-act="skip" aria-label="Skip">' + ico('x', 26, 2.2) + '</button>Skip</div>' +
+    '<div class="act"><button class="keep" data-act="keep" aria-label="Shortlist">' + ico('check', 26, 2.6) + '</button>Shortlist</div></div>' +
+    '</section>';
+}
+function thumb(i) { return '<span class="thumb">' + scene(i.look[0]).replace('class="scene"', '') + '</span>'; }
+function vResults() {
+  var top = '<div class="topbar"><button class="round" data-act="home" aria-label="Back to home">' + ico('arrowLeft') + '</button></div>';
+  if (!S.shortlist.length) {
+    return '<section class="screen">' + top + '<div class="empty">' +
+      '<div style="width:88px;height:88px;border-radius:44px;overflow:hidden;position:relative">' + logo(88).replace('border-radius:', '') + '</div>' +
+      '<h2 class="display" style="margin:8px 0 0;font-size:30px;line-height:1.1;color:var(--ink)">' + (S.noMatch ? 'Nothing fits all of that' : 'Nothing grabbed you?') + '</h2>' +
+      '<p class="muted" style="margin:0;font-size:15px;line-height:1.45">' + (S.noMatch ? 'Try loosening one of your answers, or let us surprise you.' : 'No problem. Change your answers or try a surprise round.') + '</p>' +
+      '<div style="margin-top:16px;display:flex;flex-direction:column;gap:10px;width:100%"><button class="btn btn-primary" data-act="start">Change answers</button><button class="btn btn-outline" data-act="surprise">Surprise me</button></div></div></section>';
+  }
+  var rows = S.shortlist.map(function (id) { var i = idea(id); return '<button class="row" data-act="choose" data-id="' + id + '">' + thumb(i) + '<span style="flex:1"><span class="rt">' + i.title + '</span><span class="rs">' + i.len + ' · ' + COST[i.cost] + '</span></span><span class="muted">' + ico('chevron', 18) + '</span></button>'; }).join('');
+  return '<section class="screen">' + top +
+    '<h2 class="display h2">Your shortlist</h2><p class="muted" style="margin:8px 0 0;font-size:15px">' + S.shortlist.length + (S.shortlist.length === 1 ? ' idea' : ' ideas') + '. Tap one to lock it in, or let us choose.</p>' +
+    '<div class="list">' + rows + '</div><div class="grow" style="min-height:20px"></div>' +
+    '<button class="btn btn-primary" data-act="pickforus">' + ico('shuffle', 20) + 'Pick one for us</button>' +
+    '<button class="btn btn-ghost" style="margin-top:8px" data-act="again">Start again</button></section>';
+}
+function placeRow(p) {
+  return '<a class="row place" href="' + p.url + '" target="_blank" rel="noopener"><span class="pin">' + ico('pin', 18) + '</span><span style="flex:1"><span class="rt" style="font-size:15px">' + p.name + '</span><span class="rs">' + p.meta + '</span></span><span class="maps">Maps ' + ico('ext', 14, 2.2) + '</span></a>';
+}
+function vDecided() {
+  var i = idea(S.pick), places = placesFor(i), named = places.length && !places[0].search;
+  var cta = named ? '<a class="btn btn-primary" href="' + places[0].url + '" target="_blank" rel="noopener">Directions to ' + places[0].name + ' ' + ico('arrowRight', 18, 2.2) + '</a>'
+    : places.length ? '<a class="btn btn-primary" href="' + places[0].url + '" target="_blank" rel="noopener">Find on Google Maps ' + ico('ext', 18, 2.2) + '</a>'
+    : i.link ? '<a class="btn btn-primary" href="' + i.link.url + '" target="_blank" rel="noopener">' + i.link.label + ' ' + ico('ext', 18, 2.2) + '</a>' : '';
+  return '<section class="screen">' +
+    '<div class="topbar"><button class="round" data-act="results" aria-label="Back to shortlist">' + ico('arrowLeft') + '</button></div>' +
+    '<div class="decided-scroll"><p class="eyebrow" style="margin-top:22px">It’s decided</p><h2 class="display" style="margin:0;font-size:36px;line-height:1.05;color:var(--ink)">' + i.title + '</h2>' +
+    '<div class="pickcard"><div class="tile" style="height:' + (places.length ? 120 : 170) + 'px">' + scene(i.look[0]) + '<span class="word" aria-hidden="true">' + i.look[1] + '</span></div>' +
+    '<div style="padding:16px 18px;display:flex;flex-direction:column;gap:10px"><p class="muted" style="margin:0;font-size:15px">' + (i.needs ? i.note + ' Needs ' + i.needs + '.' : i.note) + '</p>' +
+    whyFor(i).map(function (w) { return '<div class="wline">' + ico('check', 16, 2.5) + '<span>' + w + '</span></div>'; }).join('') + '</div></div>' +
+    (places.length ? '<div style="margin-top:14px;display:flex;flex-direction:column;gap:8px"><span class="eyebrow" style="margin:0">Where to go</span>' + places.slice(0, 3).map(placeRow).join('') + '</div>' : '') +
+    '</div>' + cta + '<button class="btn btn-ghost" style="margin-top:8px" data-act="again">Start again</button></section>';
+}
+function vSheet() {
+  var i = idea(S.sheet), list = placesFor(i);
+  return '<div class="sheet-wrap"><button class="close" data-act="closesheet" aria-label="Close"></button><div class="sheet" role="dialog" aria-label="Where to go">' +
+    '<div class="handle"></div><h3 class="display" style="margin:4px 0 0;font-size:26px;color:var(--ink)">Where to go</h3>' +
+    '<p class="muted" style="margin:0 0 4px;font-size:13px">Rough drive times from ' + (LOC.mine ? 'where you are' : 'central Milton Keynes') + '.</p>' +
+    list.map(placeRow).join('') + '</div></div>';
+}
+
+/* ---------- Actions ---------- */
+var toastT;
+function toast(msg) { S.toast = msg; render(); clearTimeout(toastT); toastT = setTimeout(function () { S.toast = null; render(); }, 2200); }
+function go(screen) { S.screen = screen; S.sheet = null; render(); window.scrollTo(0, 0); }
+function startQuestions() { S.mode = 'questions'; S.step = 0; S.a = blank(); S.shortlist = []; S.idx = 0; go('questions'); }
+function finish() {
+  var b = build(S.mode, S.mode === 'surprise' ? blank() : S.a);
+  S.deck = b.deck; S.hidden = b.hidden; S.idx = 0; S.shortlist = []; S.noMatch = !b.deck.length;
+  go(b.deck.length ? 'cards' : 'results');
+}
+function next() { if (S.step < QS.length - 1) { S.step++; render(); } else finish(); }
+var qT;
+function decide(keep) {
+  var card = document.getElementById('card'); if (!card || S.flying) return;
+  S.flying = true; var id = S.deck[S.idx];
+  card.classList.remove('dragging');
+  card.style.transform = 'translateX(' + (keep ? 560 : -560) + 'px) rotate(' + (keep ? 24 : -24) + 'deg)';
+  setTimeout(function () {
+    S.flying = false;
+    if (keep) S.shortlist.push(id);
+    S.idx++;
+    if (S.idx >= S.deck.length) { S.noMatch = false; go('results'); } else render();
+  }, 240);
+}
+function bindSwipe() {
+  var card = document.getElementById('card'), yes = document.getElementById('stampYes'), no = document.getElementById('stampNo');
+  var startX = null, startY = 0, dx = 0, dragging = false, pid = null;
+  card.addEventListener('pointerdown', function (e) { if (S.flying || e.target.closest('a,button')) return; startX = e.clientX; startY = e.clientY; dx = 0; dragging = false; pid = e.pointerId; });
+  card.addEventListener('pointermove', function (e) {
+    if (startX === null) return;
+    dx = e.clientX - startX;
+    if (!dragging) { if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(e.clientY - startY)) return; dragging = true; card.classList.add('dragging'); try { card.setPointerCapture(pid); } catch (err) {} }
+    card.style.transform = 'translateX(' + dx + 'px) rotate(' + (dx / 22) + 'deg)';
+    yes.style.opacity = Math.max(0, Math.min(1, dx / 100)); no.style.opacity = Math.max(0, Math.min(1, -dx / 100));
+  });
+  function end() {
+    if (startX === null) return; startX = null;
+    if (!dragging) return;
+    card.classList.remove('dragging');
+    if (dx > 90) decide(true); else if (dx < -90) decide(false);
+    else { card.style.transform = ''; yes.style.opacity = 0; no.style.opacity = 0; }
+  }
+  card.addEventListener('pointerup', end); card.addEventListener('pointercancel', end);
+}
+document.addEventListener('keydown', function (e) {
+  if (S.screen === 'cards' && !S.sheet) { if (e.key === 'ArrowRight') decide(true); if (e.key === 'ArrowLeft') decide(false); }
+  if (e.key === 'Escape' && S.sheet) { S.sheet = null; render(); }
+});
+document.addEventListener('click', function (e) {
+  var el = e.target.closest('[data-act]'); if (!el) return;
+  var act = el.getAttribute('data-act'), v = el.getAttribute('data-v');
+  switch (act) {
+    case 'enter': go('home'); break;
+    case 'phrase': S.phrase = (S.phrase + 1) % PHRASES.length; render(); break;
+    case 'loc': askLocation(); break;
+    case 'start': startQuestions(); break;
+    case 'surprise': S.mode = 'surprise'; finish(); break;
+    case 'home': go('home'); break;
+    case 'qback': if (S.step === 0) go('home'); else { S.step--; render(); } break;
+    case 'qskip': var k = QS[S.step].key; S.a[k] = k === 'who' ? [] : null; next(); break;
+    case 'qnext': next(); break;
+    case 'peck': S.a.peckish = !S.a.peckish; render(); break;
+    case 'opt':
+      var q = QS[S.step];
+      if (q.multi) { var at = S.a.who.indexOf(v); if (at === -1) S.a.who.push(v); else S.a.who.splice(at, 1); render(); }
+      else { S.a[q.key] = (q.key === 'energy') ? parseInt(v, 10) : v; render(); clearTimeout(qT); qT = setTimeout(next, 200); }
+      break;
+    case 'skip': decide(false); break;
+    case 'keep': decide(true); break;
+    case 'places': S.sheet = el.getAttribute('data-id'); render(); break;
+    case 'closesheet': S.sheet = null; render(); break;
+    case 'choose': S.pick = el.getAttribute('data-id'); go('decided'); break;
+    case 'pickforus': S.pick = S.shortlist[Math.floor(Math.random() * S.shortlist.length)]; go('decided'); break;
+    case 'results': go('results'); break;
+    case 'again': S.shortlist = []; S.idx = 0; S.step = 0; S.a = blank(); go('home'); break;
+  }
+});
+
+/* ---------- Start ---------- */
+var remembered = false;
+try { remembered = localStorage.getItem('chooser-loc') === 'yes'; } catch (e) {}
+render();
+loadWeather();
+if (remembered) askLocation();
+setInterval(function () { if (S.screen === 'home') render(); }, 60000);
+</script>
+</body>
+</html>
